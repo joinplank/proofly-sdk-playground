@@ -16,8 +16,6 @@ function handleError(error: unknown): { success: false; error: string } {
   return { success: false, error: message };
 }
 
-
-
 export async function checkFacebookFriendsAction(apiKey: string, baseURL: string, params: PlankProofly.CheckFacebookFriendCheckParams): Promise<ActionResult<PlankProofly.CheckFacebookFriendCheckResponse>> {
   try {
     const client = getClient(apiKey, baseURL);
