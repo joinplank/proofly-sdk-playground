@@ -68,14 +68,9 @@ const client = new PlankProofly({
 **3. Making Requests**
 
 ```typescript
-// Example: Health Check
-const health = await client.health.check();
-
-// Example: Compare Images
-const comparison = await client.compareImages.compare({
-  imageUrl1: 'https://example.com/image1.jpg',
-  imageUrl2: 'https://example.com/image2.jpg',
-  additionalInstructions: 'Check for facial similarities'
+// Example: Find Mutual Friends
+const mutualFriends = await client.findMutualFriends.create({
+  userIds: ['123', '456', '789'] // comma-separated IDs also supported
 });
 
 // Example: Search Profiles
@@ -89,12 +84,9 @@ const profiles = await client.profiles.search({
 
 This application demonstrates the following Proofly SDK capabilities:
 
--   **Health Check**: Verify API availability.
--   **Compare Images**: Compare two images with optional instructions.
 -   **Check Facebook Friends**: Verify friendship status between users.
 -   **Find Mutual Friends**: Identify mutual connections between users.
 -   **Search Profiles**: Search for people by name, location, and other criteria.
--   **Fuzzy Search**: Perform fuzzy matching on names, locations, etc.
 -   **Verify Profile Photo**: Verify if a profile photo matches a user.
 -   **Job Status**: Check the status of asynchronous jobs.
 

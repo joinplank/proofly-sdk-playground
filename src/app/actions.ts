@@ -16,25 +16,7 @@ function handleError(error: unknown): { success: false; error: string } {
   return { success: false, error: message };
 }
 
-export async function checkHealthAction(apiKey: string, baseURL: string): Promise<ActionResult<PlankProofly.HealthCheckResponse>> {
-  try {
-    const client = getClient(apiKey, baseURL);
-    const data = await client.health.check();
-    return { success: true, data };
-  } catch (error) {
-    return handleError(error);
-  }
-}
 
-export async function compareImagesAction(apiKey: string, baseURL: string, params: PlankProofly.CompareImageCompareParams): Promise<ActionResult<PlankProofly.CompareImageCompareResponse>> {
-  try {
-    const client = getClient(apiKey, baseURL);
-    const data = await client.compareImages.compare(params);
-    return { success: true, data };
-  } catch (error) {
-    return handleError(error);
-  }
-}
 
 export async function checkFacebookFriendsAction(apiKey: string, baseURL: string, params: PlankProofly.CheckFacebookFriendCheckParams): Promise<ActionResult<PlankProofly.CheckFacebookFriendCheckResponse>> {
   try {
@@ -66,25 +48,6 @@ export async function searchProfilesAction(apiKey: string, baseURL: string, para
   }
 }
 
-export async function fuzzySearchSuggestAction(apiKey: string, baseURL: string, params: PlankProofly.FuzzySearchSuggestParams): Promise<ActionResult<PlankProofly.FuzzySearchSuggestResponse>> {
-  try {
-    const client = getClient(apiKey, baseURL);
-    const data = await client.fuzzySearch.suggest(params);
-    return { success: true, data };
-  } catch (error) {
-    return handleError(error);
-  }
-}
-
-export async function fuzzySearchBatchAction(apiKey: string, baseURL: string, params: PlankProofly.FuzzySearchSuggestBatchParams): Promise<ActionResult<PlankProofly.FuzzySearchSuggestBatchResponse>> {
-  try {
-    const client = getClient(apiKey, baseURL);
-    const data = await client.fuzzySearch.suggestBatch(params);
-    return { success: true, data };
-  } catch (error) {
-    return handleError(error);
-  }
-}
 
 export async function verifyProfilePhotoAction(apiKey: string, baseURL: string, params: PlankProofly.VerifyProfilePhotoVerifyParams): Promise<ActionResult<PlankProofly.VerifyProfilePhotoVerifyResponse>> {
   try {

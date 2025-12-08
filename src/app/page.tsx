@@ -41,13 +41,9 @@ export default function Home() {
           </div>
         </div>
 
-        <HealthCheck apiKey={apiKey} baseUrl={baseUrl} />
-        <CompareImages apiKey={apiKey} baseUrl={baseUrl} />
         <CheckFriends apiKey={apiKey} baseUrl={baseUrl} />
         <MutualFriends apiKey={apiKey} baseUrl={baseUrl} />
         <SearchProfiles apiKey={apiKey} baseUrl={baseUrl} />
-        <FuzzySearch apiKey={apiKey} baseUrl={baseUrl} />
-        <FuzzyBatchSearch apiKey={apiKey} baseUrl={baseUrl} />
         <VerifyPhoto apiKey={apiKey} baseUrl={baseUrl} />
         <JobStatus apiKey={apiKey} baseUrl={baseUrl} />
       </div>
@@ -85,53 +81,6 @@ function Section({ title, endpoint, children, onAction, result, loading }: Secti
         </pre>
       )}
     </div>
-  );
-}
-
-function HealthCheck({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
-  const [result, setResult] = useState<ActionResult<PlankProofly.HealthCheckResponse> | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleAction = async () => {
-    setLoading(true);
-    const res = await Actions.checkHealthAction(apiKey, baseUrl);
-    setResult(res);
-    setLoading(false);
-  };
-
-  return (
-    <Section title="Health Check" endpoint="GET /health" onAction={handleAction} result={result} loading={loading}>
-      <p className="text-sm text-gray-600">Check service availability.</p>
-    </Section>
-  );
-}
-
-function CompareImages({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
-  const [img1, setImg1] = useState('');
-  const [img2, setImg2] = useState('');
-  const [instr, setInstr] = useState('');
-  const [result, setResult] = useState<ActionResult<PlankProofly.CompareImageCompareResponse> | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleAction = async () => {
-    setLoading(true);
-    const res = await Actions.compareImagesAction(apiKey, baseUrl, {
-      imageUrl1: img1,
-      imageUrl2: img2,
-      additionalInstructions: instr || undefined
-    });
-    setResult(res);
-    setLoading(false);
-  };
-
-  return (
-    <Section title="Compare Images" endpoint="POST /compare-images" onAction={handleAction} result={result} loading={loading}>
-      <div className="grid grid-cols-1 gap-4">
-        <Input label="Image URL 1 (Required)" value={img1} onChange={setImg1} placeholder="https://..." />
-        <Input label="Image URL 2 (Required)" value={img2} onChange={setImg2} placeholder="https://..." />
-        <TextArea label="Additional Instructions" value={instr} onChange={setInstr} />
-      </div>
-    </Section>
   );
 }
 
@@ -254,104 +203,6 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
           <TextArea label="Additional Instructions" value={form.instr || ''} onChange={v => handleChange('instr', v)} />
         </div>
       </div>
-    </Section>
-  );
-}
-
-function FuzzySearch({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
-  const [type, setType] = useState<string>('name');
-  const [value, setValue] = useState('');
-  const [hint, setHint] = useState('');
-  const [subCat, setSubCat] = useState('');
-  const [instr, setInstr] = useState('');
-  const [result, setResult] = useState<ActionResult<PlankProofly.FuzzySearchSuggestResponse> | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleAction = async () => {
-    setLoading(true);
-    const params: PlankProofly.FuzzySearchSuggestParams = {
-      type: type as 'name' | 'location' | 'occupation' | 'email',
-      value,
-      additionalInstructions: instr || undefined
-    };
-    if (hint || subCat) {
-      params.context = {
-        hint: hint || undefined,
-        subCategory: (subCat as 'hometown' | 'current') || undefined
-      };
-    }
-    const res = await Actions.fuzzySearchSuggestAction(apiKey, baseUrl, params);
-    setResult(res);
-    setLoading(false);
-  };
-
-  return (
-    <Section title="Fuzzy Search" endpoint="POST /fuzzy-search" onAction={handleAction} result={result} loading={loading}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <select
-            value={type}
-            onChange={e => setType(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
-          >
-            <option value="name">Name</option>
-            <option value="location">Location</option>
-            <option value="occupation">Occupation</option>
-            <option value="email">Email</option>
-          </select>
-        </div>
-        <Input label="Value (Required)" value={value} onChange={setValue} />
-        <Input label="Context Hint" value={hint} onChange={setHint} />
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Context Sub Category</label>
-          <select
-            value={subCat}
-            onChange={e => setSubCat(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
-          >
-            <option value="">Select...</option>
-            <option value="hometown">Hometown</option>
-            <option value="current">Current</option>
-          </select>
-        </div>
-
-        <div className="md:col-span-2">
-          <TextArea label="Additional Instructions" value={instr} onChange={setInstr} />
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-function FuzzyBatchSearch({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
-  const [json, setJson] = useState('');
-  const [result, setResult] = useState<ActionResult<PlankProofly.FuzzySearchSuggestBatchResponse> | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleAction = async () => {
-    setLoading(true);
-    try {
-      const requests = JSON.parse(json);
-      const res = await Actions.fuzzySearchBatchAction(apiKey, baseUrl, { requests });
-      setResult(res);
-    } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : String(e);
-      setResult({ success: false, error: 'Invalid JSON: ' + message });
-    }
-    setLoading(false);
-  };
-
-  return (
-    <Section title="Fuzzy Search Batch" endpoint="POST /fuzzy-search/batch" onAction={handleAction} result={result} loading={loading}>
-      <TextArea
-        label="Requests JSON (Array of objects)"
-        value={json}
-        onChange={setJson}
-        placeholder='[{"type": "name", "value": "John"}, {"type": "location", "value": "NY"}]'
-        rows={6}
-      />
     </Section>
   );
 }
