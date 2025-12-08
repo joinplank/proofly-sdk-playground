@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Proofly SDK Playground App
+
+This is a [Next.js](https://nextjs.org) example project demonstrating how to integrate and use the `@plank-proofly/api` SDK. It provides a web interface to interact with various Proofly API endpoints.
+
+## Prerequisites
+
+- Node.js 18+ 
+- An API Key for the Proofly service
 
 ## Getting Started
 
-First, run the development server:
+1.  **Clone the repository:**
+
+    ```bash
+    git clone <repository-url>
+    cd proofly-sdk-playground
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    # or
+    yarn install
+    # or
+    pnpm install
+    ```
+
+3.  **Run the development server:**
+
+    ```bash
+    npm run dev
+    ```
+
+4.  **Open the application:**
+    Open [http://localhost:3000](http://localhost:3000) with your browser.
+
+## Usage
+
+### Configuration
+
+Upon opening the app, you will see a configuration section. You must enter your **API Key** to authenticate requests.
+
+-   **X-API-Key**: Your Proofly API key.
+-   **Base URL**: Defaults to the standard API endpoint, but can be configured if needed.
+
+### SDK Integration Example
+
+The core logic for interacting with the SDK is located in `src/app/actions.ts`. Here is how to initialize the client and make a request:
+
+**1. Installation**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install @plank-proofly/api
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**2. Initialization**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```typescript
+import PlankProofly from '@plank-proofly/api';
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+const client = new PlankProofly({
+  apiKey: 'YOUR_API_KEY',
+  baseURL: 'https://api.proofly.io/api' // Optional
+});
+```
 
-## Learn More
+**3. Making Requests**
 
-To learn more about Next.js, take a look at the following resources:
+```typescript
+// Example: Health Check
+const health = await client.health.check();
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+// Example: Compare Images
+const comparison = await client.compareImages.compare({
+  imageUrl1: 'https://example.com/image1.jpg',
+  imageUrl2: 'https://example.com/image2.jpg',
+  additionalInstructions: 'Check for facial similarities'
+});
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+// Example: Search Profiles
+const profiles = await client.profiles.search({
+  name: 'John Doe',
+  location: 'New York'
+});
+```
 
-## Deploy on Vercel
+## Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This application demonstrates the following Proofly SDK capabilities:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-   **Health Check**: Verify API availability.
+-   **Compare Images**: Compare two images with optional instructions.
+-   **Check Facebook Friends**: Verify friendship status between users.
+-   **Find Mutual Friends**: Identify mutual connections between users.
+-   **Search Profiles**: Search for people by name, location, and other criteria.
+-   **Fuzzy Search**: Perform fuzzy matching on names, locations, etc.
+-   **Verify Profile Photo**: Verify if a profile photo matches a user.
+-   **Job Status**: Check the status of asynchronous jobs.
+
+## Project Structure
+
+-   `src/app/page.tsx`: Main UI component containing forms for each API endpoint.
+-   `src/app/actions.ts`: Server Actions that handle SDK initialization and API calls.

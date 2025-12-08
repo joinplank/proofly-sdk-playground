@@ -12,8 +12,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900">Proofly SDK Test Console (Next.js)</h1>
-        <p className="text-gray-600 mb-8">Test interface for Proofly API endpoints using @plank-proofly/api SDK</p>
+        <h1 className="text-3xl font-bold mb-2 text-gray-900">Proofly SDK Playground Console (Next.js)</h1>
+        <p className="text-gray-600 mb-8">Playground interface for Proofly API endpoints using @plank-proofly/api SDK</p>
 
         {/* Configuration */}
         <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8 shadow-sm">
