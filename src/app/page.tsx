@@ -7,7 +7,7 @@ import * as Actions from './actions';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
-  const [baseUrl, setBaseUrl] = useState('https://ai-accelerator-hackathon-backend-bitter-bird-9940.fly.dev/api');
+  const baseUrl = 'https://api.proofly.joinplank.com/';
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
@@ -22,19 +22,10 @@ export default function Home() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">X-API-Key</label>
               <input
-                type="password"
+                type='text'
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="Enter your API Key"
-                className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Base URL</label>
-              <input
-                type="text"
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
               />
             </div>
