@@ -7,7 +7,7 @@ import * as Actions from './actions';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
-  const baseUrl = 'https://api.proofly.joinplank.com/';
+  const baseUrl = 'https://api.proofly.joinplank.com/api';
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
