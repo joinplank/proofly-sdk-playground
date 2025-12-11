@@ -16,10 +16,20 @@ function handleError(error: unknown): { success: false; error: string } {
   return { success: false, error: message };
 }
 
-export async function checkFacebookFriendsAction(apiKey: string, baseURL: string, params: PlankProofly.CheckFacebookFriendCheckParams): Promise<ActionResult<PlankProofly.CheckFacebookFriendCheckResponse>> {
+export async function getFacebookFriendsAction(apiKey: string, baseURL: string, params: PlankProofly.GetFacebookFriendCreateParams): Promise<ActionResult<PlankProofly.GetFacebookFriendCreateResponse>> {
   try {
     const client = getClient(apiKey, baseURL);
-    const data = await client.checkFacebookFriends.check(params);
+    const data = await client.getFacebookFriends.create(params);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function checkFacebookFriendsAction(apiKey: string, baseURL: string, params: PlankProofly.CheckFacebookFriendCreateParams): Promise<ActionResult<PlankProofly.CheckFacebookFriendCreateResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.checkFacebookFriends.create(params);
     return { success: true, data };
   } catch (error) {
     return handleError(error);
