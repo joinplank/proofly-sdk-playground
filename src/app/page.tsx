@@ -7,7 +7,7 @@ import * as Actions from './actions';
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
-  const baseUrl = 'https://api.proofly.joinplank.com/api';
+  const baseUrl = 'https://api.proofly.joinplank.com';
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
@@ -47,6 +47,7 @@ export default function Home() {
           </div>
         </div>
 
+        <FindFriends apiKey={apiKey} baseUrl={baseUrl} />
         <CheckFriends apiKey={apiKey} baseUrl={baseUrl} />
         <MutualFriends apiKey={apiKey} baseUrl={baseUrl} />
         <SearchProfiles apiKey={apiKey} baseUrl={baseUrl} />
@@ -90,10 +91,32 @@ function Section({ title, endpoint, children, onAction, result, loading }: Secti
   );
 }
 
+function FindFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [target, setTarget] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.GetFacebookFriendCreateResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    setLoading(true);
+
+    const res = await Actions.getFacebookFriendsAction(apiKey, baseUrl, {
+      targetFacebookId: target,
+    });
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section title="Get Facebook Friends" endpoint="POST /get-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+      <Input label="Target Facebook ID (Required)" value={target} onChange={setTarget} />
+    </Section>
+  );
+}
+
 function CheckFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   const [target, setTarget] = useState('');
   const [candidates, setCandidates] = useState('');
-  const [result, setResult] = useState<ActionResult<PlankProofly.CheckFacebookFriendCheckResponse> | null>(null);
+  const [result, setResult] = useState<ActionResult<PlankProofly.CheckFacebookFriendCreateResponse> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleAction = async () => {
