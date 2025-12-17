@@ -77,20 +77,20 @@ export async function searchByLocationOccupationAction(apiKey: string, baseURL: 
   }
 }
 
-export async function buildConnectionGraphAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileConnectionGraphCreateParams): Promise<ActionResult<PlankProofly.ProfileConnectionGraphCreateResponse>> {
+export async function buildConnectionGraphAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileBuildConnectionGraphParams): Promise<ActionResult<PlankProofly.ProfileBuildConnectionGraphResponse>> {
   try {
     const client = getClient(apiKey, baseURL);
-    const data = await client.profiles.connectionGraph.create(params);
+    const data = await client.profiles.buildConnectionGraph(params);
     return { success: true, data };
   } catch (error) {
     return handleError(error);
   }
 }
 
-export async function fetchProfileInteractionsAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileInteractionCreateParams): Promise<ActionResult<PlankProofly.ProfileInteractionCreateResponse>> {
+export async function fetchProfileInteractionsAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileInteractionFetchParams): Promise<ActionResult<PlankProofly.ProfileInteractionFetchResponse>> {
   try {
     const client = getClient(apiKey, baseURL);
-    const data = await client.profileInteractions.create(params);
+    const data = await client.profileInteractions.fetch(params);
     return { success: true, data };
   } catch (error) {
     return handleError(error);

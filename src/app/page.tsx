@@ -377,29 +377,18 @@ function SearchByLocationOccupation({ apiKey, baseUrl }: { apiKey: string, baseU
   );
 }
 
-interface ConnectionGraphProfile {
-  name: string;
-  email?: string;
-  birthYear?: string;
-  dob?: string;
-  location?: string;
-  subCategory?: string;
-  photoUrl?: string;
-  associates?: string;
-}
-
 function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   const [profilesJson, setProfilesJson] = useState('');
   const [location, setLocation] = useState('');
   const [subCategory, setSubCategory] = useState('');
-  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileConnectionGraphCreateResponse> | null>(null);
+  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileBuildConnectionGraphResponse> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleAction = async () => {
     setLoading(true);
     try {
       const profiles: PlankProofly.ProfileSearchParams[] = JSON.parse(profilesJson);
-      const params: PlankProofly.ProfileConnectionGraphCreateParams = {
+      const params: PlankProofly.ProfileBuildConnectionGraphParams = {
         profiles,
         globalFilters: (location || subCategory) ? {
           location: location || undefined,
@@ -408,7 +397,7 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
       };
       const res = await Actions.buildConnectionGraphAction(apiKey, baseUrl, params);
       setResult(res);
-    } catch (error) {
+    } catch {
       setResult({ success: false, error: 'Invalid JSON format for profiles array' });
     }
     setLoading(false);
@@ -458,12 +447,12 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
   const [profileId, setProfileId] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
   const [postLimit, setPostLimit] = useState('5');
-  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileInteractionCreateResponse> | null>(null);
+  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileInteractionFetchResponse> | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleAction = async () => {
     setLoading(true);
-    const params: PlankProofly.ProfileInteractionCreateParams = {
+    const params: PlankProofly.ProfileInteractionFetchParams = {
       ...(profileId ? { profileId } : {}),
       ...(profileUrl ? { profileUrl } : {}),
       postLimit: postLimit ? parseInt(postLimit) : 5
@@ -581,11 +570,12 @@ interface InputProps {
   value: string | number;
   onChange: (value: string) => void;
   type?: string;
+  step?: string;
   placeholder?: string;
   description?: string;
 }
 
-function Input({ label, value, onChange, type = "text", placeholder, description }: InputProps) {
+function Input({ label, value, onChange, type = "text", step, placeholder, description }: InputProps) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -594,6 +584,7 @@ function Input({ label, value, onChange, type = "text", placeholder, description
       )}
       <input
         type={type}
+        {...(step ? { step } : {})}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
