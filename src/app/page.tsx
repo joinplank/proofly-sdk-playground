@@ -50,7 +50,10 @@ export default function Home() {
         <FindFriends apiKey={apiKey} baseUrl={baseUrl} />
         <CheckFriends apiKey={apiKey} baseUrl={baseUrl} />
         <MutualFriends apiKey={apiKey} baseUrl={baseUrl} />
+        <SearchByLocationOccupation apiKey={apiKey} baseUrl={baseUrl} />
         <SearchProfiles apiKey={apiKey} baseUrl={baseUrl} />
+        <ConnectionGraph apiKey={apiKey} baseUrl={baseUrl} />
+        <ProfileInteractions apiKey={apiKey} baseUrl={baseUrl} />
         <VerifyPhoto apiKey={apiKey} baseUrl={baseUrl} />
         <JobStatus apiKey={apiKey} baseUrl={baseUrl} />
       </div>
@@ -107,8 +110,14 @@ function FindFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Facebook Friends" endpoint="POST /get-facebook-friends" onAction={handleAction} result={result} loading={loading}>
-      <Input label="Target Facebook ID (Required)" value={target} onChange={setTarget} />
+    <Section title="Get Facebook Friends" endpoint="POST /api/get-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+      <Input
+        label="Facebook Profile or Username (Required)"
+        value={target}
+        onChange={setTarget}
+        placeholder="e.g., john.smith or 10001234567890"
+        description="Enter the person's Facebook username (like john.smith) or their profile ID number. This is the profile whose friends list you want to retrieve."
+      />
     </Section>
   );
 }
@@ -131,9 +140,21 @@ function CheckFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) 
   };
 
   return (
-    <Section title="Check Facebook Friends" endpoint="POST /check-facebook-friends" onAction={handleAction} result={result} loading={loading}>
-      <Input label="Target Facebook ID (Required)" value={target} onChange={setTarget} />
-      <TextArea label="Candidate IDs (Required, comma separated)" value={candidates} onChange={setCandidates} placeholder="id1, id2" />
+    <Section title="Check Facebook Friends" endpoint="POST /api/check-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+      <Input
+        label="Target Facebook Profile or Username (Required)"
+        value={target}
+        onChange={setTarget}
+        placeholder="e.g., john.smith or 10001234567890"
+        description="Enter the Facebook username or profile ID of the person you want to check. This is the main profile whose friends list will be checked."
+      />
+      <TextArea
+        label="Profiles to Check (Required, comma separated)"
+        value={candidates}
+        onChange={setCandidates}
+        placeholder="jane.doe, bob.jones or 10001234567891, 10001234567892"
+        description="Enter the Facebook usernames or profile IDs of the people you want to check if they're friends with the target profile. Separate multiple entries with commas. Useful for verifying relationships and connections."
+      />
     </Section>
   );
 }
@@ -154,8 +175,14 @@ function MutualFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string })
   };
 
   return (
-    <Section title="Find Mutual Friends" endpoint="POST /find-mutual-friends" onAction={handleAction} result={result} loading={loading}>
-      <TextArea label="User IDs (Required, comma separated)" value={ids} onChange={setIds} placeholder="id1, id2" />
+    <Section title="Find Mutual Friends" endpoint="POST /api/find-mutual-friends" onAction={handleAction} result={result} loading={loading}>
+      <TextArea
+        label="Facebook Profiles or Usernames (Required, comma separated, minimum 2)"
+        value={ids}
+        onChange={setIds}
+        placeholder="john.smith, jane.doe, bob.jones or 10001234567890, 10001234567891"
+        description="Enter at least two Facebook usernames or profile IDs separated by commas. The tool will find friends that are common to all the profiles you list."
+      />
     </Section>
   );
 }
@@ -169,6 +196,7 @@ interface ProfileSearchForm {
   subCategory?: string;
   photoUrl?: string;
   associates?: string;
+  minConfidenceScore?: string;
   instr?: string;
 }
 
@@ -189,7 +217,8 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
       location: form.location || undefined,
       subCategory: (form.subCategory as 'hometown' | 'current') || undefined,
       photoUrl: form.photoUrl || undefined,
-      additionalInstructions: form.instr || undefined
+      additionalInstructions: form.instr || undefined,
+      minConfidenceScore: form.minConfidenceScore ? parseFloat(form.minConfidenceScore) : undefined
     };
     if (form.associates) {
       params.knownAssociates = form.associates.split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -201,36 +230,263 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
   };
 
   return (
-    <Section title="Search Profiles" endpoint="POST /profiles/search" onAction={handleAction} result={result} loading={loading}>
+    <Section title="Search Profiles" endpoint="POST /api/profiles/search" onAction={handleAction} result={result} loading={loading}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Name (Required)" value={form.name || ''} onChange={v => handleChange('name', v)} />
-        <Input label="Email" value={form.email || ''} onChange={v => handleChange('email', v)} />
-        <Input label="Birth Year" type="number" value={form.birthYear || ''} onChange={v => handleChange('birthYear', v)} />
-        <Input label="Date of Birth (YYYY-MM-DD)" type="date" value={form.dob || ''} onChange={v => handleChange('dob', v)} />
-        <Input label="Location" value={form.location || ''} onChange={v => handleChange('location', v)} />
+        <Input
+          label="Name (Required)"
+          value={form.name || ''}
+          onChange={v => handleChange('name', v)}
+          placeholder="e.g., John Doe"
+          description="Full name or partial name to search for"
+        />
+        <Input
+          label="Email"
+          value={form.email || ''}
+          onChange={v => handleChange('email', v)}
+          placeholder="john.doe@example.com"
+          description="Email address associated with the profile"
+        />
+        <Input
+          label="Birth Year"
+          type="number"
+          value={form.birthYear || ''}
+          onChange={v => handleChange('birthYear', v)}
+          placeholder="e.g., 1990"
+          description="Year of birth (1900-2025) to narrow down search results"
+        />
+        <Input
+          label="Date of Birth"
+          type="date"
+          value={form.dob || ''}
+          onChange={v => handleChange('dob', v)}
+          description="Select the person's exact date of birth to help find the right match"
+        />
+        <Input
+          label="Location"
+          value={form.location || ''}
+          onChange={v => handleChange('location', v)}
+          placeholder="e.g., New York, NY or San Francisco"
+          description="City or location name (minimum 2 characters). Use subcategory below to specify hometown vs current location"
+        />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Sub Category</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Location Sub Category
+            <span className="ml-2 text-xs text-gray-500 font-normal">(for location field)</span>
+          </label>
           <select
             value={form.subCategory}
             onChange={e => handleChange('subCategory', e.target.value)}
             className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
           >
-            <option value="">Select...</option>
+            <option value="">Select location type...</option>
             <option value="hometown">Hometown</option>
-            <option value="current">Current</option>
+            <option value="current">Current Location</option>
           </select>
         </div>
 
         <div className="md:col-span-2">
-          <Input label="Photo URL" value={form.photoUrl || ''} onChange={v => handleChange('photoUrl', v)} />
+          <Input
+            label="Photo URL"
+            value={form.photoUrl || ''}
+            onChange={v => handleChange('photoUrl', v)}
+            placeholder="https://example.com/photo.jpg"
+            description="Paste the web address (URL) of a photo of the person. The system will use facial recognition to find profiles that match this photo."
+          />
         </div>
         <div className="md:col-span-2">
-          <TextArea label="Known Associates (comma separated)" value={form.associates || ''} onChange={v => handleChange('associates', v)} />
+          <TextArea
+            label="Known Associates (comma separated, max 20)"
+            value={form.associates || ''}
+            onChange={v => handleChange('associates', v)}
+            placeholder="Jane Smith, Bob Johnson"
+            description="Enter the names of people who might be friends or connected to the person you're looking for. This helps narrow down results by finding profiles with similar social connections."
+          />
         </div>
         <div className="md:col-span-2">
-          <TextArea label="Additional Instructions" value={form.instr || ''} onChange={v => handleChange('instr', v)} />
+          <Input
+            label="Minimum Confidence Score (0.0 to 1.0)"
+            type="number"
+            step="0.1"
+            value={form.minConfidenceScore || ''}
+            onChange={v => handleChange('minConfidenceScore', v)}
+            placeholder="e.g., 0.8"
+            description="Filter results by how confident the match is. Use a value between 0.0 and 1.0. Higher numbers (like 0.8 or 0.9) show fewer results but they're more likely to be accurate matches."
+          />
         </div>
+        <div className="md:col-span-2">
+          <TextArea
+            label="Additional Instructions"
+            value={form.instr || ''}
+            onChange={v => handleChange('instr', v)}
+            placeholder="Any extra details that might help find the right person..."
+            description="Add any additional information that could help narrow down the search, such as specific details about the person, their interests, or other identifying information."
+          />
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function SearchByLocationOccupation({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [occupation, setOccupation] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.SearchByLocationOccupationCreateResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    setLoading(true);
+    const res = await Actions.searchByLocationOccupationAction(apiKey, baseUrl, {
+      city,
+      state: state || undefined,
+      occupation
+    });
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section title="Search by Location and Occupation" endpoint="POST /api/search-by-location-occupation" onAction={handleAction} result={result} loading={loading}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="City (Required)"
+          value={city}
+          onChange={setCity}
+          placeholder="e.g., San Francisco"
+          description="City name to search for profiles"
+        />
+        <Input
+          label="State (Optional)"
+          value={state}
+          onChange={setState}
+          placeholder="e.g., CA or California"
+          description="State name or abbreviation to narrow down location search"
+        />
+        <div className="md:col-span-2">
+          <Input
+            label="Occupation (Required)"
+            value={occupation}
+            onChange={setOccupation}
+            placeholder="e.g., Software Engineer, Doctor, Teacher"
+            description="Enter the job title or profession to search for. The system will find all profiles matching this occupation in the specified location."
+          />
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [profilesJson, setProfilesJson] = useState('');
+  const [location, setLocation] = useState('');
+  const [subCategory, setSubCategory] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileBuildConnectionGraphResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    setLoading(true);
+    try {
+      const profiles: PlankProofly.ProfileSearchParams[] = JSON.parse(profilesJson);
+      const params: PlankProofly.ProfileBuildConnectionGraphParams = {
+        profiles,
+        globalFilters: (location || subCategory) ? {
+          location: location || undefined,
+          subCategory: (subCategory as 'hometown' | 'current') || undefined
+        } : undefined
+      };
+      const res = await Actions.buildConnectionGraphAction(apiKey, baseUrl, params);
+      setResult(res);
+    } catch {
+      setResult({ success: false, error: 'Invalid JSON format for profiles array' });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <Section title="Build Connection Graph" endpoint="POST /api/profiles/connection-graph" onAction={handleAction} result={result} loading={loading}>
+      <div className="space-y-4">
+        <TextArea
+          label="Profiles to Search (Required, JSON format, max 100)"
+          value={profilesJson}
+          onChange={setProfilesJson}
+          placeholder={`[\n  { "name": "John Doe", "location": "New York" },\n  { "name": "Jane Smith", "email": "jane@example.com" }\n]`}
+          description="Enter a list of profiles to search for in JSON format. Each profile needs at least a name, and you can add other details like location, email, etc. The system will find how all these profiles are connected to each other through their friends."
+          rows={8}
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Global Location Filter (Optional)"
+            value={location}
+            onChange={setLocation}
+            placeholder="e.g., New York"
+            description="If you want to filter all profiles by a specific location, enter it here"
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Global Location Sub Category
+              <span className="ml-2 text-xs text-gray-500 font-normal">(for global location filter)</span>
+            </label>
+            <select
+              value={subCategory}
+              onChange={e => setSubCategory(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md text-sm text-black"
+            >
+              <option value="">Select...</option>
+              <option value="hometown">Hometown</option>
+              <option value="current">Current</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </Section>
+  );
+}
+
+function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [profileId, setProfileId] = useState('');
+  const [profileUrl, setProfileUrl] = useState('');
+  const [postLimit, setPostLimit] = useState('5');
+  const [result, setResult] = useState<ActionResult<PlankProofly.ProfileInteractionFetchResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    setLoading(true);
+    const params: PlankProofly.ProfileInteractionFetchParams = {
+      ...(profileId ? { profileId } : {}),
+      ...(profileUrl ? { profileUrl } : {}),
+      postLimit: postLimit ? parseInt(postLimit) : 5
+    };
+    const res = await Actions.fetchProfileInteractionsAction(apiKey, baseUrl, params);
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section title="Fetch Profile Interactions" endpoint="POST /api/profile-interactions" onAction={handleAction} result={result} loading={loading}>
+      <div className="space-y-4">
+        <Input
+          label="Facebook Profile or Username (Optional)"
+          value={profileId}
+          onChange={setProfileId}
+          placeholder="e.g., john.smith or 10001234567890"
+          description="Enter the person's Facebook username or profile ID. You can use either this field or the Profile URL field below."
+        />
+        <Input
+          label="Profile URL (Optional)"
+          value={profileUrl}
+          onChange={setProfileUrl}
+          placeholder="https://www.facebook.com/john.smith"
+          description="Enter the full Facebook profile URL (the web address when you visit someone's profile). You can use either this field or the Profile/Username field above."
+        />
+        <Input
+          label="Number of Posts to Check (1-20, default: 5)"
+          type="number"
+          value={postLimit}
+          onChange={setPostLimit}
+          placeholder="5"
+          description="Choose how many recent posts to check for likes and comments. The system will analyze interactions on up to this many posts."
+        />
       </div>
     </Section>
   );
@@ -255,11 +511,29 @@ function VerifyPhoto({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Verify Profile Photo" endpoint="POST /verify-profile-photo" onAction={handleAction} result={result} loading={loading}>
+    <Section title="Verify Profile Photo" endpoint="POST /api/verify-profile-photo" onAction={handleAction} result={result} loading={loading}>
       <div className="grid grid-cols-1 gap-4">
-        <Input label="Photo URL (Required)" value={photo} onChange={setPhoto} />
-        <Input label="Profile URL (Required)" value={profile} onChange={setProfile} />
-        <TextArea label="Additional Instructions" value={instr} onChange={setInstr} />
+        <Input
+          label="Photo URL (Required)"
+          value={photo}
+          onChange={setPhoto}
+          placeholder="https://example.com/verification-photo.jpg"
+          description="Paste the web address (URL) of the photo you want to verify. This is the photo you're checking to see if it matches the Facebook profile."
+        />
+        <Input
+          label="Facebook Profile URL (Required)"
+          value={profile}
+          onChange={setProfile}
+          placeholder="https://www.facebook.com/john.smith"
+          description="Paste the full Facebook profile web address (URL) of the person. The system will compare your photo against all photos on this Facebook profile to see if there's a match."
+        />
+        <TextArea
+          label="Additional Instructions"
+          value={instr}
+          onChange={setInstr}
+          placeholder="Any extra details about the photo comparison..."
+          description="Add any additional information that could help with the photo comparison, such as the age of the photo, specific features to focus on, or other relevant context. This is useful for identity verification processes."
+        />
       </div>
     </Section>
   );
@@ -279,8 +553,14 @@ function JobStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Job Status" endpoint="GET /jobs/{jobId}" onAction={handleAction} result={result} loading={loading}>
-      <Input label="Job ID (UUID)" value={jobId} onChange={setJobId} placeholder="uuid..." />
+    <Section title="Get Job Status" endpoint="GET /api/jobs/{jobId}" onAction={handleAction} result={result} loading={loading}>
+      <Input
+        label="Job ID"
+        value={jobId}
+        onChange={setJobId}
+        placeholder="e.g., 123e4567-e89b-12d3-a456-426614174000"
+        description="Enter the job ID number you received when you submitted a request. Use this to check the status of your request and get the results once it's finished processing."
+      />
     </Section>
   );
 }
@@ -290,15 +570,21 @@ interface InputProps {
   value: string | number;
   onChange: (value: string) => void;
   type?: string;
+  step?: string;
   placeholder?: string;
+  description?: string;
 }
 
-function Input({ label, value, onChange, type = "text", placeholder }: InputProps) {
+function Input({ label, value, onChange, type = "text", step, placeholder, description }: InputProps) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {description && (
+        <p className="text-xs text-gray-500 mb-1.5">{description}</p>
+      )}
       <input
         type={type}
+        {...(step ? { step } : {})}
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
@@ -314,12 +600,16 @@ interface TextAreaProps {
   onChange: (value: string) => void;
   placeholder?: string;
   rows?: number;
+  description?: string;
 }
 
-function TextArea({ label, value, onChange, placeholder, rows = 3 }: TextAreaProps) {
+function TextArea({ label, value, onChange, placeholder, rows = 3, description }: TextAreaProps) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {description && (
+        <p className="text-xs text-gray-500 mb-1.5">{description}</p>
+      )}
       <textarea
         value={value}
         onChange={e => onChange(e.target.value)}

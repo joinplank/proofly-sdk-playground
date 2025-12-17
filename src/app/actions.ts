@@ -67,6 +67,36 @@ export async function verifyProfilePhotoAction(apiKey: string, baseURL: string, 
   }
 }
 
+export async function searchByLocationOccupationAction(apiKey: string, baseURL: string, params: PlankProofly.SearchByLocationOccupationCreateParams): Promise<ActionResult<PlankProofly.SearchByLocationOccupationCreateResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.searchByLocationOccupation.create(params);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function buildConnectionGraphAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileBuildConnectionGraphParams): Promise<ActionResult<PlankProofly.ProfileBuildConnectionGraphResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.profiles.buildConnectionGraph(params);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
+export async function fetchProfileInteractionsAction(apiKey: string, baseURL: string, params: PlankProofly.ProfileInteractionFetchParams): Promise<ActionResult<PlankProofly.ProfileInteractionFetchResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.profileInteractions.fetch(params);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+
 export async function getJobStatusAction(apiKey: string, baseURL: string, jobId: string): Promise<ActionResult<PlankProofly.JobRetrieveStatusResponse>> {
   try {
     const client = getClient(apiKey, baseURL);
