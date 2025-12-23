@@ -452,11 +452,15 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
 
   const handleAction = async () => {
     setLoading(true);
-    const params: PlankProofly.ProfileInteractionFetchParams = {
-      ...(profileId ? { profileId } : {}),
-      ...(profileUrl ? { profileUrl } : {}),
-      postLimit: postLimit ? parseInt(postLimit) : 5
-    };
+    const params: PlankProofly.ProfileInteractionFetchParams = profileId
+      ? {
+        profileId,
+        postLimit: postLimit ? parseInt(postLimit) : 5
+      }
+      : {
+        profileUrl: profileUrl,
+        postLimit: postLimit ? parseInt(postLimit) : 5
+      };
     const res = await Actions.fetchProfileInteractionsAction(apiKey, baseUrl, params);
     setResult(res);
     setLoading(false);
