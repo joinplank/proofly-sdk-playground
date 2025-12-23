@@ -3,6 +3,8 @@
 import PlankProofly from '@plank-proofly/api';
 import { useState } from 'react';
 import type { ActionResult } from './actions';
+
+import { ClipLoader } from "react-spinners";
 import * as Actions from './actions';
 
 export default function Home() {
@@ -56,6 +58,7 @@ export default function Home() {
         <ProfileInteractions apiKey={apiKey} baseUrl={baseUrl} />
         <VerifyPhoto apiKey={apiKey} baseUrl={baseUrl} />
         <JobStatus apiKey={apiKey} baseUrl={baseUrl} />
+        <JobAutoRetrieveStatus apiKey={apiKey} baseUrl={baseUrl} />
       </div>
     </div>
   );
@@ -68,9 +71,11 @@ interface SectionProps {
   onAction: () => void;
   result: ActionResult<unknown> | null;
   loading: boolean;
+  buttonLoadingText?: string;
 }
 
-function Section({ title, endpoint, children, onAction, result, loading }: SectionProps) {
+function Section({ title, endpoint, children, onAction, result, loading, buttonLoadingText }: SectionProps) {
+  const loadingText = buttonLoadingText || 'Loading';
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
       <h2 className="text-xl font-semibold mb-2 text-gray-800">{title}</h2>
@@ -80,9 +85,15 @@ function Section({ title, endpoint, children, onAction, result, loading }: Secti
         <button
           onClick={onAction}
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 flex items-center gap-2"
         >
-          {loading ? 'Loading...' : 'Execute'}
+          {loading ? loadingText : 'Execute'}
+          <ClipLoader
+            color="#10b981"
+            loading={loading}
+            size={16}
+            aria-label="Loading"
+          />
         </button>
       </div>
       {result && (
@@ -443,7 +454,10 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
   );
 }
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [activeTab, setActiveTab] = useState('id');
   const [profileId, setProfileId] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
   const [postLimit, setPostLimit] = useState('5');
@@ -453,8 +467,8 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
   const handleAction = async () => {
     setLoading(true);
     const params: PlankProofly.ProfileInteractionFetchParams = {
-      ...(profileId ? { profileId } : {}),
-      ...(profileUrl ? { profileUrl } : {}),
+      ...(activeTab === 'id' && profileId ? { profileId } : {}),
+      ...(activeTab === 'url' && profileUrl ? { profileUrl } : {}),
       postLimit: postLimit ? parseInt(postLimit) : 5
     };
     const res = await Actions.fetchProfileInteractionsAction(apiKey, baseUrl, params);
@@ -464,30 +478,40 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
 
   return (
     <Section title="Fetch Profile Interactions" endpoint="POST /api/profile-interactions" onAction={handleAction} result={result} loading={loading}>
-      <div className="space-y-4">
-        <Input
-          label="Facebook Profile or Username (Optional)"
-          value={profileId}
-          onChange={setProfileId}
-          placeholder="e.g., john.smith or 10001234567890"
-          description="Enter the person's Facebook username or profile ID. You can use either this field or the Profile URL field below."
-        />
-        <Input
-          label="Profile URL (Optional)"
-          value={profileUrl}
-          onChange={setProfileUrl}
-          placeholder="https://www.facebook.com/john.smith"
-          description="Enter the full Facebook profile URL (the web address when you visit someone's profile). You can use either this field or the Profile/Username field above."
-        />
-        <Input
-          label="Number of Posts to Check (1-20, default: 5)"
-          type="number"
-          value={postLimit}
-          onChange={setPostLimit}
-          placeholder="5"
-          description="Choose how many recent posts to check for likes and comments. The system will analyze interactions on up to this many posts."
-        />
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="id">Facebook Username/ID</TabsTrigger>
+          <TabsTrigger value="url">Profile URL</TabsTrigger>
+        </TabsList>
+        <div className="space-y-4 mt-4">
+          <TabsContent value="id" className="mt-0">
+            <Input
+              label="Facebook Profile or Username (Required)"
+              value={profileId}
+              onChange={setProfileId}
+              placeholder="e.g., john.smith or 10001234567890"
+              description="Enter the person's Facebook username or profile ID."
+            />
+          </TabsContent>
+          <TabsContent value="url" className="mt-0">
+            <Input
+              label="Profile URL (Required)"
+              value={profileUrl}
+              onChange={setProfileUrl}
+              placeholder="https://www.facebook.com/john.smith"
+              description="Enter the full Facebook profile URL."
+            />
+          </TabsContent>
+          <Input
+            label="Number of Posts to Check (1-20, default: 5)"
+            type="number"
+            value={postLimit}
+            onChange={setPostLimit}
+            placeholder="5"
+            description="Choose how many recent posts to check for likes and comments."
+          />
+        </div>
+      </Tabs>
     </Section>
   );
 }
@@ -561,6 +585,31 @@ function JobStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
         placeholder="e.g., 123e4567-e89b-12d3-a456-426614174000"
         description="Enter the job ID number you received when you submitted a request. Use this to check the status of your request and get the results once it's finished processing."
       />
+    </Section>
+  );
+}
+
+function JobAutoRetrieveStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [jobId, setJobId] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.JobRetrieveStatusResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    if (!jobId) return;
+    setLoading(true);
+    const res = await Actions.autoRetrieveJobStatusAction(apiKey, baseUrl, jobId);
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section title="Auto Retrieve Job Status" endpoint="GET /api/jobs/{jobId}" onAction={handleAction} result={result} loading={loading} buttonLoadingText="Waiting for job status change">
+      <Input
+        label="Job ID"
+        value={jobId}
+        onChange={setJobId}
+        placeholder="e.g., 123e4567-e89b-12d3-a456-426614174000"
+        description="Enter the job ID number you received when you submitted a request. Use this to auto retrieve the job status until the job is completed." />
     </Section>
   );
 }
