@@ -7,6 +7,21 @@ import type { ActionResult } from './actions';
 import { ClipLoader } from "react-spinners";
 import * as Actions from './actions';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Code, Copy } from "lucide-react"
+import { toast } from "sonner"
+import * as Examples from "@/lib/examples"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
   const baseUrl = 'https://api.proofly.joinplank.com';
@@ -72,14 +87,59 @@ interface SectionProps {
   result: ActionResult<unknown> | null;
   loading: boolean;
   buttonLoadingText?: string;
+  exampleCode?: string;
 }
 
-function Section({ title, endpoint, children, onAction, result, loading, buttonLoadingText }: SectionProps) {
+function Section({ title, endpoint, children, onAction, result, loading, buttonLoadingText, exampleCode }: SectionProps) {
   const loadingText = buttonLoadingText || 'Loading';
+
+  const copyToClipboard = () => {
+    if (exampleCode) {
+      navigator.clipboard.writeText(exampleCode);
+      toast.success("Code copied to clipboard!");
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-      <h2 className="text-xl font-semibold mb-2 text-gray-800">{title}</h2>
-      <div className="text-sm text-gray-500 mb-4 font-mono">{endpoint}</div>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800">{title}</h2>
+          <div className="text-sm text-gray-500 font-mono">{endpoint}</div>
+        </div>
+        {exampleCode && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Code className="h-4 w-4" />
+                View Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-full max-w-5xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Code Example: {title}</DialogTitle>
+                <DialogDescription>
+                  Copy and paste this code to use the {title} feature in your application.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="relative mt-4 bg-slate-950 rounded-lg p-4 overflow-x-auto">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute top-2 right-2 text-white hover:bg-slate-800 hover:text-white"
+                  onClick={copyToClipboard}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <pre className="text-sm text-slate-50 font-mono">
+                  {exampleCode}
+                </pre>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
       <div className="space-y-4">
         {children}
         <button
@@ -121,7 +181,14 @@ function FindFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Facebook Friends" endpoint="POST /api/get-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Get Facebook Friends"
+      endpoint="POST /api/get-facebook-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.GET_FACEBOOK_FRIENDS_EXAMPLE}
+    >
       <Input
         label="Facebook Profile or Username (Required)"
         value={target}
@@ -151,7 +218,14 @@ function CheckFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) 
   };
 
   return (
-    <Section title="Check Facebook Friends" endpoint="POST /api/check-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Check Facebook Friends"
+      endpoint="POST /api/check-facebook-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.CHECK_FACEBOOK_FRIENDS_EXAMPLE}
+    >
       <Input
         label="Target Facebook Profile or Username (Required)"
         value={target}
@@ -186,7 +260,14 @@ function MutualFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string })
   };
 
   return (
-    <Section title="Find Mutual Friends" endpoint="POST /api/find-mutual-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Find Mutual Friends"
+      endpoint="POST /api/find-mutual-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.FIND_MUTUAL_FRIENDS_EXAMPLE}
+    >
       <TextArea
         label="Facebook Profiles or Usernames (Required, comma separated, minimum 2)"
         value={ids}
@@ -241,7 +322,14 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
   };
 
   return (
-    <Section title="Search Profiles" endpoint="POST /api/profiles/search" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Search Profiles"
+      endpoint="POST /api/profiles/search"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.SEARCH_PROFILES_EXAMPLE}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="Name (Required)"
@@ -280,7 +368,7 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
           description="City or location name (minimum 2 characters). Use subcategory below to specify hometown vs current location"
         />
 
-        <div>
+        <div className="flex flex-col justify-between">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Location Sub Category
             <span className="ml-2 text-xs text-gray-500 font-normal">(for location field)</span>
@@ -358,7 +446,14 @@ function SearchByLocationOccupation({ apiKey, baseUrl }: { apiKey: string, baseU
   };
 
   return (
-    <Section title="Search by Location and Occupation" endpoint="POST /api/search-by-location-occupation" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Search by Location and Occupation"
+      endpoint="POST /api/search-by-location-occupation"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.SEARCH_BY_LOCATION_OCCUPATION_EXAMPLE}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="City (Required)"
@@ -415,7 +510,14 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
   };
 
   return (
-    <Section title="Build Connection Graph" endpoint="POST /api/profiles/connection-graph" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Build Connection Graph"
+      endpoint="POST /api/profiles/connection-graph"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.BUILD_CONNECTION_GRAPH_EXAMPLE}
+    >
       <div className="space-y-4">
         <TextArea
           label="Profiles to Search (Required, JSON format, max 100)"
@@ -433,7 +535,7 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
             placeholder="e.g., New York"
             description="If you want to filter all profiles by a specific location, enter it here"
           />
-          <div>
+          <div className="flex flex-col justify-between">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Global Location Sub Category
               <span className="ml-2 text-xs text-gray-500 font-normal">(for global location filter)</span>
@@ -454,7 +556,6 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
   );
 }
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   const [activeTab, setActiveTab] = useState('id');
@@ -477,7 +578,14 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
   };
 
   return (
-    <Section title="Fetch Profile Interactions" endpoint="POST /api/profile-interactions" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Fetch Profile Interactions"
+      endpoint="POST /api/profile-interactions"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.FETCH_PROFILE_INTERACTIONS_EXAMPLE}
+    >
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="id">Facebook Username/ID</TabsTrigger>
@@ -535,7 +643,14 @@ function VerifyPhoto({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Verify Profile Photo" endpoint="POST /api/verify-profile-photo" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Verify Profile Photo"
+      endpoint="POST /api/verify-profile-photo"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.VERIFY_PROFILE_PHOTO_EXAMPLE}
+    >
       <div className="grid grid-cols-1 gap-4">
         <Input
           label="Photo URL (Required)"
@@ -577,7 +692,14 @@ function JobStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Job Status" endpoint="GET /api/jobs/{jobId}" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Get Job Status"
+      endpoint="GET /api/jobs/{jobId}"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.GET_JOB_STATUS_EXAMPLE}
+    >
       <Input
         label="Job ID"
         value={jobId}
@@ -603,7 +725,15 @@ function JobAutoRetrieveStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: s
   };
 
   return (
-    <Section title="Auto Retrieve Job Status" endpoint="GET /api/jobs/{jobId}" onAction={handleAction} result={result} loading={loading} buttonLoadingText="Waiting for job status change">
+    <Section
+      title="Auto Retrieve Job Status"
+      endpoint="GET /api/jobs/{jobId}"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      buttonLoadingText="Waiting for job status change"
+      exampleCode={Examples.AUTO_RETRIEVE_JOB_STATUS_EXAMPLE}
+    >
       <Input
         label="Job ID"
         value={jobId}
