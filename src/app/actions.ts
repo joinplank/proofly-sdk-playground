@@ -107,3 +107,12 @@ export async function getJobStatusAction(apiKey: string, baseURL: string, jobId:
   }
 }
 
+export async function autoRetrieveJobStatusAction(apiKey: string, baseURL: string, jobId: string): Promise<ActionResult<PlankProofly.JobRetrieveStatusResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.jobs.autoRetrieveStatus(jobId);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}

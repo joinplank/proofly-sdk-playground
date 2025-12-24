@@ -3,7 +3,24 @@
 import PlankProofly from '@plank-proofly/api';
 import { useState } from 'react';
 import type { ActionResult } from './actions';
+
+import { ClipLoader } from "react-spinners";
 import * as Actions from './actions';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Code, Copy } from "lucide-react"
+import { toast } from "sonner"
+import * as Examples from "@/lib/examples"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Home() {
   const [apiKey, setApiKey] = useState('');
@@ -56,6 +73,7 @@ export default function Home() {
         <ProfileInteractions apiKey={apiKey} baseUrl={baseUrl} />
         <VerifyPhoto apiKey={apiKey} baseUrl={baseUrl} />
         <JobStatus apiKey={apiKey} baseUrl={baseUrl} />
+        <JobAutoRetrieveStatus apiKey={apiKey} baseUrl={baseUrl} />
       </div>
     </div>
   );
@@ -68,21 +86,74 @@ interface SectionProps {
   onAction: () => void;
   result: ActionResult<unknown> | null;
   loading: boolean;
+  buttonLoadingText?: string;
+  exampleCode?: string;
 }
 
-function Section({ title, endpoint, children, onAction, result, loading }: SectionProps) {
+function Section({ title, endpoint, children, onAction, result, loading, buttonLoadingText, exampleCode }: SectionProps) {
+  const loadingText = buttonLoadingText || 'Loading';
+
+  const copyToClipboard = () => {
+    if (exampleCode) {
+      navigator.clipboard.writeText(exampleCode);
+      toast.success("Code copied to clipboard!");
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-      <h2 className="text-xl font-semibold mb-2 text-gray-800">{title}</h2>
-      <div className="text-sm text-gray-500 mb-4 font-mono">{endpoint}</div>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800">{title}</h2>
+          <div className="text-sm text-gray-500 font-mono">{endpoint}</div>
+        </div>
+        {exampleCode && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Code className="h-4 w-4" />
+                View Code
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-full max-w-5xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Code Example: {title}</DialogTitle>
+                <DialogDescription>
+                  Copy and paste this code to use the {title} feature in your application.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="relative mt-4 bg-slate-950 rounded-lg p-4 overflow-x-auto">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute top-2 right-2 text-white hover:bg-slate-800 hover:text-white"
+                  onClick={copyToClipboard}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <pre className="text-sm text-slate-50 font-mono">
+                  {exampleCode}
+                </pre>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
       <div className="space-y-4">
         {children}
         <button
           onClick={onAction}
           disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50 flex items-center gap-2"
         >
-          {loading ? 'Loading...' : 'Execute'}
+          {loading ? loadingText : 'Execute'}
+          <ClipLoader
+            color="#10b981"
+            loading={loading}
+            size={16}
+            aria-label="Loading"
+          />
         </button>
       </div>
       {result && (
@@ -110,7 +181,14 @@ function FindFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Facebook Friends" endpoint="POST /api/get-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Get Facebook Friends"
+      endpoint="POST /api/get-facebook-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.GET_FACEBOOK_FRIENDS_EXAMPLE}
+    >
       <Input
         label="Facebook Profile or Username (Required)"
         value={target}
@@ -140,7 +218,14 @@ function CheckFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) 
   };
 
   return (
-    <Section title="Check Facebook Friends" endpoint="POST /api/check-facebook-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Check Facebook Friends"
+      endpoint="POST /api/check-facebook-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.CHECK_FACEBOOK_FRIENDS_EXAMPLE}
+    >
       <Input
         label="Target Facebook Profile or Username (Required)"
         value={target}
@@ -175,7 +260,14 @@ function MutualFriends({ apiKey, baseUrl }: { apiKey: string, baseUrl: string })
   };
 
   return (
-    <Section title="Find Mutual Friends" endpoint="POST /api/find-mutual-friends" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Find Mutual Friends"
+      endpoint="POST /api/find-mutual-friends"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.FIND_MUTUAL_FRIENDS_EXAMPLE}
+    >
       <TextArea
         label="Facebook Profiles or Usernames (Required, comma separated, minimum 2)"
         value={ids}
@@ -230,7 +322,14 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
   };
 
   return (
-    <Section title="Search Profiles" endpoint="POST /api/profiles/search" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Search Profiles"
+      endpoint="POST /api/profiles/search"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.SEARCH_PROFILES_EXAMPLE}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="Name (Required)"
@@ -269,7 +368,7 @@ function SearchProfiles({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }
           description="City or location name (minimum 2 characters). Use subcategory below to specify hometown vs current location"
         />
 
-        <div>
+        <div className="flex flex-col justify-between">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Location Sub Category
             <span className="ml-2 text-xs text-gray-500 font-normal">(for location field)</span>
@@ -347,7 +446,14 @@ function SearchByLocationOccupation({ apiKey, baseUrl }: { apiKey: string, baseU
   };
 
   return (
-    <Section title="Search by Location and Occupation" endpoint="POST /api/search-by-location-occupation" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Search by Location and Occupation"
+      endpoint="POST /api/search-by-location-occupation"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.SEARCH_BY_LOCATION_OCCUPATION_EXAMPLE}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
           label="City (Required)"
@@ -404,7 +510,14 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
   };
 
   return (
-    <Section title="Build Connection Graph" endpoint="POST /api/profiles/connection-graph" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Build Connection Graph"
+      endpoint="POST /api/profiles/connection-graph"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.BUILD_CONNECTION_GRAPH_EXAMPLE}
+    >
       <div className="space-y-4">
         <TextArea
           label="Profiles to Search (Required, JSON format, max 100)"
@@ -422,7 +535,7 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
             placeholder="e.g., New York"
             description="If you want to filter all profiles by a specific location, enter it here"
           />
-          <div>
+          <div className="flex flex-col justify-between">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Global Location Sub Category
               <span className="ml-2 text-xs text-gray-500 font-normal">(for global location filter)</span>
@@ -443,7 +556,9 @@ function ConnectionGraph({ apiKey, baseUrl }: { apiKey: string, baseUrl: string 
   );
 }
 
+
 function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [activeTab, setActiveTab] = useState('id');
   const [profileId, setProfileId] = useState('');
   const [profileUrl, setProfileUrl] = useState('');
   const [postLimit, setPostLimit] = useState('5');
@@ -453,8 +568,8 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
   const handleAction = async () => {
     setLoading(true);
     const params: PlankProofly.ProfileInteractionFetchParams = {
-      ...(profileId ? { profileId } : {}),
-      ...(profileUrl ? { profileUrl } : {}),
+      ...(activeTab === 'id' && profileId ? { profileId } : {}),
+      ...(activeTab === 'url' && profileUrl ? { profileUrl } : {}),
       postLimit: postLimit ? parseInt(postLimit) : 5
     };
     const res = await Actions.fetchProfileInteractionsAction(apiKey, baseUrl, params);
@@ -463,31 +578,48 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
   };
 
   return (
-    <Section title="Fetch Profile Interactions" endpoint="POST /api/profile-interactions" onAction={handleAction} result={result} loading={loading}>
-      <div className="space-y-4">
-        <Input
-          label="Facebook Profile or Username (Optional)"
-          value={profileId}
-          onChange={setProfileId}
-          placeholder="e.g., john.smith or 10001234567890"
-          description="Enter the person's Facebook username or profile ID. You can use either this field or the Profile URL field below."
-        />
-        <Input
-          label="Profile URL (Optional)"
-          value={profileUrl}
-          onChange={setProfileUrl}
-          placeholder="https://www.facebook.com/john.smith"
-          description="Enter the full Facebook profile URL (the web address when you visit someone's profile). You can use either this field or the Profile/Username field above."
-        />
-        <Input
-          label="Number of Posts to Check (1-20, default: 5)"
-          type="number"
-          value={postLimit}
-          onChange={setPostLimit}
-          placeholder="5"
-          description="Choose how many recent posts to check for likes and comments. The system will analyze interactions on up to this many posts."
-        />
-      </div>
+    <Section
+      title="Fetch Profile Interactions"
+      endpoint="POST /api/profile-interactions"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.FETCH_PROFILE_INTERACTIONS_EXAMPLE}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="id">Facebook Username/ID</TabsTrigger>
+          <TabsTrigger value="url">Profile URL</TabsTrigger>
+        </TabsList>
+        <div className="space-y-4 mt-4">
+          <TabsContent value="id" className="mt-0">
+            <Input
+              label="Facebook Profile or Username (Required)"
+              value={profileId}
+              onChange={setProfileId}
+              placeholder="e.g., john.smith or 10001234567890"
+              description="Enter the person's Facebook username or profile ID."
+            />
+          </TabsContent>
+          <TabsContent value="url" className="mt-0">
+            <Input
+              label="Profile URL (Required)"
+              value={profileUrl}
+              onChange={setProfileUrl}
+              placeholder="https://www.facebook.com/john.smith"
+              description="Enter the full Facebook profile URL."
+            />
+          </TabsContent>
+          <Input
+            label="Number of Posts to Check (1-20, default: 5)"
+            type="number"
+            value={postLimit}
+            onChange={setPostLimit}
+            placeholder="5"
+            description="Choose how many recent posts to check for likes and comments."
+          />
+        </div>
+      </Tabs>
     </Section>
   );
 }
@@ -511,7 +643,14 @@ function VerifyPhoto({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Verify Profile Photo" endpoint="POST /api/verify-profile-photo" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Verify Profile Photo"
+      endpoint="POST /api/verify-profile-photo"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.VERIFY_PROFILE_PHOTO_EXAMPLE}
+    >
       <div className="grid grid-cols-1 gap-4">
         <Input
           label="Photo URL (Required)"
@@ -553,7 +692,14 @@ function JobStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
   };
 
   return (
-    <Section title="Get Job Status" endpoint="GET /api/jobs/{jobId}" onAction={handleAction} result={result} loading={loading}>
+    <Section
+      title="Get Job Status"
+      endpoint="GET /api/jobs/{jobId}"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.GET_JOB_STATUS_EXAMPLE}
+    >
       <Input
         label="Job ID"
         value={jobId}
@@ -561,6 +707,39 @@ function JobStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
         placeholder="e.g., 123e4567-e89b-12d3-a456-426614174000"
         description="Enter the job ID number you received when you submitted a request. Use this to check the status of your request and get the results once it's finished processing."
       />
+    </Section>
+  );
+}
+
+function JobAutoRetrieveStatus({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [jobId, setJobId] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.JobRetrieveStatusResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    if (!jobId) return;
+    setLoading(true);
+    const res = await Actions.autoRetrieveJobStatusAction(apiKey, baseUrl, jobId);
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section
+      title="Auto Retrieve Job Status"
+      endpoint="GET /api/jobs/{jobId}"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      buttonLoadingText="Waiting for job status change"
+      exampleCode={Examples.AUTO_RETRIEVE_JOB_STATUS_EXAMPLE}
+    >
+      <Input
+        label="Job ID"
+        value={jobId}
+        onChange={setJobId}
+        placeholder="e.g., 123e4567-e89b-12d3-a456-426614174000"
+        description="Enter the job ID number you received when you submitted a request. Use this to auto retrieve the job status until the job is completed." />
     </Section>
   );
 }
