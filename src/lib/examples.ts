@@ -178,3 +178,28 @@ async function main() {
 }
 
 main();`;
+
+export const FETCH_PHOTO_TAGS_EXAMPLE = `import PlankProofly from '@plank-proofly/api';
+
+const client = new PlankProofly({
+  apiKey: 'YOUR_API_KEY',
+});
+
+async function main() {
+  const result = await client.photoTags.fetch({
+    profileUrl: 'https://facebook.com/john.doe',
+    photoLimit: 20, // Default is 10, max 50
+    // Optional filters:
+    // fbAccountIds: ['987654321', '555666777'],
+    // fbAccountNames: ['Jane Smith', 'Bob Johnson']
+  });
+
+  console.log(\`Found \${result.tags.length} tagged accounts\`);
+  console.log(\`Scanned \${result.photosScanned} photos\`);
+
+  for (const tag of result.tags) {
+    console.log(\`\${tag.name} - \${tag.profileUrl}\`);
+  }
+}
+
+main();`;

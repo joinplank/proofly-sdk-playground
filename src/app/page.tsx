@@ -71,6 +71,7 @@ export default function Home() {
         <SearchProfiles apiKey={apiKey} baseUrl={baseUrl} />
         <ConnectionGraph apiKey={apiKey} baseUrl={baseUrl} />
         <ProfileInteractions apiKey={apiKey} baseUrl={baseUrl} />
+        <PhotoTags apiKey={apiKey} baseUrl={baseUrl} />
         <VerifyPhoto apiKey={apiKey} baseUrl={baseUrl} />
         <JobStatus apiKey={apiKey} baseUrl={baseUrl} />
         <JobAutoRetrieveStatus apiKey={apiKey} baseUrl={baseUrl} />
@@ -617,6 +618,97 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
             onChange={setPostLimit}
             placeholder="5"
             description="Choose how many recent posts to check for likes and comments."
+          />
+        </div>
+      </Tabs>
+    </Section>
+  );
+}
+
+function PhotoTags({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
+  const [activeTab, setActiveTab] = useState('url');
+  const [profileId, setProfileId] = useState('');
+  const [profileUrl, setProfileUrl] = useState('');
+  const [photoLimit, setPhotoLimit] = useState('10');
+  const [fbAccountIds, setFbAccountIds] = useState('');
+  const [fbAccountNames, setFbAccountNames] = useState('');
+  const [result, setResult] = useState<ActionResult<PlankProofly.PhotoTagFetchResponse> | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleAction = async () => {
+    setLoading(true);
+    const params: PlankProofly.PhotoTagFetchParams = {
+      ...(activeTab === 'id' && profileId ? { profileId } : {}),
+      ...(activeTab === 'url' && profileUrl ? { profileUrl } : {}),
+      photoLimit: photoLimit ? parseInt(photoLimit) : 10
+    };
+
+    if (fbAccountIds.trim()) {
+      params.fbAccountIds = fbAccountIds.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (fbAccountNames.trim()) {
+      params.fbAccountNames = fbAccountNames.split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    const res = await Actions.fetchPhotoTagsAction(apiKey, baseUrl, params);
+    setResult(res);
+    setLoading(false);
+  };
+
+  return (
+    <Section
+      title="Fetch Photo Tags"
+      endpoint="POST /api/photo-tags"
+      onAction={handleAction}
+      result={result}
+      loading={loading}
+      exampleCode={Examples.FETCH_PHOTO_TAGS_EXAMPLE}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="url">Profile URL</TabsTrigger>
+          <TabsTrigger value="id">Facebook Username/ID</TabsTrigger>
+        </TabsList>
+        <div className="space-y-4 mt-4">
+          <TabsContent value="url" className="mt-0">
+            <Input
+              label="Profile URL (Required)"
+              value={profileUrl}
+              onChange={setProfileUrl}
+              placeholder="https://facebook.com/john.doe"
+              description="Enter the full Facebook profile URL of the person whose photo tags you want to extract."
+            />
+          </TabsContent>
+          <TabsContent value="id" className="mt-0">
+            <Input
+              label="Facebook Profile or Username (Required)"
+              value={profileId}
+              onChange={setProfileId}
+              placeholder="e.g., john.smith or 10001234567890"
+              description="Enter the person's Facebook username or numeric profile ID."
+            />
+          </TabsContent>
+          <Input
+            label="Number of Photos to Scan (1-50, default: 10)"
+            type="number"
+            value={photoLimit}
+            onChange={setPhotoLimit}
+            placeholder="10"
+            description="Maximum number of photos to scan for tagged accounts."
+          />
+          <TextArea
+            label="Filter by Account IDs (optional, comma separated)"
+            value={fbAccountIds}
+            onChange={setFbAccountIds}
+            placeholder="987654321, 555666777"
+            description="Only return tags matching these Facebook account IDs. Leave empty to get all tags."
+          />
+          <TextArea
+            label="Filter by Account Names (optional, comma separated)"
+            value={fbAccountNames}
+            onChange={setFbAccountNames}
+            placeholder="Jane Smith, Bob Johnson"
+            description="Only return tags matching these names. Leave empty to get all tags."
           />
         </div>
       </Tabs>
