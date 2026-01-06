@@ -137,17 +137,38 @@ const client = new PlankProofly({
   apiKey: 'YOUR_API_KEY',
 });
 
-async function main() {
-  const verification = await client.verifyProfilePhoto.verify({
-    photoUrl: 'https://example.com/verification-photo.jpg',
-    profileUrl: 'https://www.facebook.com/john.smith',
-    additionalInstructions: 'Focus on facial features' // Optional
+// Option 1: Using Photo URL
+async function verifyWithUrl() {
+  const result = await client.verifyProfilePhoto.verify({
+    photoUrl: 'https://example.com/user-photo.jpg',
+    profileUrl: 'https://facebook.com/john.doe',
+    additionalInstructions: 'Focus on facial features and ignore background'
   });
 
-  console.log(verification);
+  console.log('Match result:', result);
 }
 
-main();`;
+// Option 2: Using Base64 Image
+async function verifyWithBase64() {
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
+
+  const photoBase64 = await fileToBase64(imageFile);
+
+  const result = await client.verifyProfilePhoto.verify({
+    photoBase64,
+    profileUrl: 'https://facebook.com/john.doe'
+  });
+
+  console.log('Match result:', result);
+}
+
+verifyWithUrl();`;
 
 export const GET_JOB_STATUS_EXAMPLE = `import PlankProofly from '@plank-proofly/api';
 
