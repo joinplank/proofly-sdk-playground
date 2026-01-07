@@ -116,3 +116,13 @@ export async function autoRetrieveJobStatusAction(apiKey: string, baseURL: strin
     return handleError(error);
   }
 }
+
+export async function fetchPhotoTagsAction(apiKey: string, baseURL: string, params: PlankProofly.PhotoTagFetchParams): Promise<ActionResult<PlankProofly.PhotoTagFetchResponse>> {
+  try {
+    const client = getClient(apiKey, baseURL);
+    const data = await client.photoTags.fetch(params);
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error);
+  }
+}
