@@ -625,19 +625,39 @@ function ProfileInteractions({ apiKey, baseUrl }: { apiKey: string, baseUrl: str
 }
 
 function VerifyPhoto({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
-  const [photo, setPhoto] = useState('');
+  const [activeTab, setActiveTab] = useState('url');
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoBase64, setPhotoBase64] = useState('');
   const [profile, setProfile] = useState('');
   const [instr, setInstr] = useState('');
   const [result, setResult] = useState<ActionResult<PlankProofly.VerifyProfilePhotoVerifyResponse> | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPhotoBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAction = async () => {
     setLoading(true);
-    const res = await Actions.verifyProfilePhotoAction(apiKey, baseUrl, {
-      photoUrl: photo,
+    const params: PlankProofly.VerifyProfilePhotoVerifyParams = {
       profileUrl: profile,
       additionalInstructions: instr || undefined
-    });
+    };
+
+    if (activeTab === 'url') {
+      params.photoUrl = photoUrl;
+    } else {
+      params.photoBase64 = photoBase64;
+    }
+
+    const res = await Actions.verifyProfilePhotoAction(apiKey, baseUrl, params);
     setResult(res);
     setLoading(false);
   };
@@ -651,29 +671,67 @@ function VerifyPhoto({ apiKey, baseUrl }: { apiKey: string, baseUrl: string }) {
       loading={loading}
       exampleCode={Examples.VERIFY_PROFILE_PHOTO_EXAMPLE}
     >
-      <div className="grid grid-cols-1 gap-4">
-        <Input
-          label="Photo URL (Required)"
-          value={photo}
-          onChange={setPhoto}
-          placeholder="https://example.com/verification-photo.jpg"
-          description="Paste the web address (URL) of the photo you want to verify. This is the photo you're checking to see if it matches the Facebook profile."
-        />
-        <Input
-          label="Facebook Profile URL (Required)"
-          value={profile}
-          onChange={setProfile}
-          placeholder="https://www.facebook.com/john.smith"
-          description="Paste the full Facebook profile web address (URL) of the person. The system will compare your photo against all photos on this Facebook profile to see if there's a match."
-        />
-        <TextArea
-          label="Additional Instructions"
-          value={instr}
-          onChange={setInstr}
-          placeholder="Any extra details about the photo comparison..."
-          description="Add any additional information that could help with the photo comparison, such as the age of the photo, specific features to focus on, or other relevant context. This is useful for identity verification processes."
-        />
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="url">Photo URL</TabsTrigger>
+          <TabsTrigger value="base64">Upload Image</TabsTrigger>
+        </TabsList>
+        <div className="space-y-4 mt-4">
+          <TabsContent value="url" className="mt-0">
+            <Input
+              label="Photo URL (Required)"
+              value={photoUrl}
+              onChange={setPhotoUrl}
+              placeholder="https://example.com/verification-photo.jpg"
+              description="Paste the web address (URL) of the photo you want to verify. Must be a publicly accessible image URL."
+            />
+          </TabsContent>
+          <TabsContent value="base64" className="mt-0 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Image (Required)</label>
+              <p className="text-xs text-gray-500 mb-1.5">Select an image file from your device. Supported formats: JPEG, PNG, GIF, WebP.</p>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full p-2 border border-gray-300 rounded-md text-sm text-black file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
+            {photoBase64 && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Preview</label>
+                <img
+                  src={photoBase64}
+                  alt="Preview"
+                  className="max-h-48 rounded-md border border-gray-200"
+                />
+              </div>
+            )}
+            <TextArea
+              label="Or Paste Base64 Data URI"
+              value={photoBase64}
+              onChange={setPhotoBase64}
+              placeholder="data:image/jpeg;base64,/9j/4AAQSkZ..."
+              description="Alternatively, paste a base64-encoded image data URI directly."
+              rows={2}
+            />
+          </TabsContent>
+          <Input
+            label="Facebook Profile URL (Required)"
+            value={profile}
+            onChange={setProfile}
+            placeholder="https://www.facebook.com/john.smith"
+            description="Paste the full Facebook profile web address (URL) of the person. The system will compare your photo against all photos on this Facebook profile to see if there's a match."
+          />
+          <TextArea
+            label="Additional Instructions"
+            value={instr}
+            onChange={setInstr}
+            placeholder="Any extra details about the photo comparison..."
+            description="Add any additional information that could help with the photo comparison, such as the age of the photo, specific features to focus on, or other relevant context."
+          />
+        </div>
+      </Tabs>
     </Section>
   );
 }
